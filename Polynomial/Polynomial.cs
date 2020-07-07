@@ -1,6 +1,5 @@
-using PolynomialObject.Exceptions;
 using System.Collections.Generic;
-using System.Linq;
+using PolynomialObject.Exceptions;
 
 namespace PolynomialObject
 {
@@ -8,35 +7,40 @@ namespace PolynomialObject
     {
         public List<PolynomialMember> Members { get; set; } = new List<PolynomialMember>();
 
-        public Polynomial()
-        {
-        }
+        public Polynomial() { }
 
         public Polynomial(PolynomialMember member)
         {
-            AddMember(member);
+            if (member.Coefficient != 0)
+                AddMember(member);
         }
 
         public Polynomial(IEnumerable<PolynomialMember> members)
         {
-            Members = members.ToList();
+            foreach (var member in members)
+            {
+                if (member.Coefficient != 0)
+                    AddMember(member);
+            }
         }
 
         public Polynomial((double degree, double coefficient) member)
         {
-            AddMember((member.degree, member.coefficient));
+            if (member.coefficient != 0)
+                AddMember((member.degree, member.coefficient));
         }
 
         public Polynomial(IEnumerable<(double degree, double coefficient)> members)
         {
             foreach (var (degree, coefficient) in members)
             {
-                AddMember((degree, coefficient));
+                if ((degree, coefficient).coefficient != 0)
+                    AddMember((degree, coefficient));
             }
         }
 
         /// <summary>
-        /// The amount of not null polynomial members in polynomial
+        /// The amount of not null polynomial members in polynomial 
         /// </summary>
         public int Count
         {
@@ -70,15 +74,21 @@ namespace PolynomialObject
         }
 
         /// <summary>
-        /// Adds new unique member to polynomial
+        /// Adds new unique member to polynomial 
         /// </summary>
         /// <param name="member">The member to be added</param>
         /// <exception cref="PolynomialArgumentException">Throws when member to add with such degree already exist in polynomial</exception>
         /// <exception cref="PolynomialArgumentNullException">Throws when trying to member to add is null</exception>
         public void AddMember(PolynomialMember member)
         {
-            if (member != null && member.Coefficient != 0)
-                Members.Add(member);
+            if (member == null)
+                throw new PolynomialArgumentNullException("Member to add is null");
+            if (member.Coefficient == 0)
+                throw new PolynomialArgumentException("Coefficient is zero");
+            if (ContainsMember(member.Degree))
+                throw new PolynomialArgumentException("Member to add with such degree already exist in polynomial");
+
+            Members.Add(member);
         }
 
         /// <summary>
@@ -88,14 +98,12 @@ namespace PolynomialObject
         /// <exception cref="PolynomialArgumentException">Throws when member to add with such degree already exist in polynomial</exception>
         public void AddMember((double degree, double coefficient) member)
         {
-            foreach (var item in Members)
-            {
-                if (member.degree == item.Degree)
-                    throw new PolynomialArgumentException();
-            }
+            if (member.coefficient == 0)
+                throw new PolynomialArgumentException("Coefficient is zero");
+            if (ContainsMember(member.degree))
+                throw new PolynomialArgumentException("Member to add with such degree already exist in polynomial");
 
-            PolynomialMember addMember = new PolynomialMember(member.degree, member.coefficient);
-            Members.Add(addMember);
+            Members.Add(new PolynomialMember(member.degree, member.coefficient));
         }
 
         /// <summary>
@@ -172,13 +180,14 @@ namespace PolynomialObject
                 {
                     if (value != 0)
                         AddMember((degree, value));
-                    else RemoveMember(degree);
+                    else 
+                        RemoveMember(degree);
                 }
             }
         }
 
         /// <summary>
-        /// Convert polynomial to array of included polynomial members
+        /// Convert polynomial to array of included polynomial members 
         /// </summary>
         /// <returns>Array with not null polynomial members</returns>
         public PolynomialMember[] ToArray()
@@ -195,8 +204,11 @@ namespace PolynomialObject
         /// <exception cref="PolynomialArgumentNullException">Throws if either of provided polynomials is null</exception>
         public static Polynomial operator +(Polynomial a, Polynomial b)
         {
-            if (a is null || b is null)
-                throw new PolynomialArgumentNullException();
+            if (a is null)
+                throw new PolynomialArgumentNullException("Polynomial a is null");
+
+            if (b is null)
+                throw new PolynomialArgumentNullException("Polynomial b is null");
 
             Polynomial result = new Polynomial(a.ToArray());
 
@@ -220,8 +232,11 @@ namespace PolynomialObject
         /// <exception cref="PolynomialArgumentNullException">Throws if either of provided polynomials is null</exception>
         public static Polynomial operator -(Polynomial a, Polynomial b)
         {
-            if (a is null || b is null)
-                throw new PolynomialArgumentNullException();
+            if (a is null)
+                throw new PolynomialArgumentNullException("Polynomial a is null");
+
+            if (b is null)
+                throw new PolynomialArgumentNullException("Polynomial b is null");
 
             Polynomial result = new Polynomial(a.ToArray());
 
@@ -247,8 +262,11 @@ namespace PolynomialObject
         /// <exception cref="PolynomialArgumentNullException">Throws if either of provided polynomials is null</exception>
         public static Polynomial operator *(Polynomial a, Polynomial b)
         {
-            if (a is null || b is null)
-                throw new PolynomialArgumentNullException();
+            if (a is null)
+                throw new PolynomialArgumentNullException("Polynomial a is null");
+
+            if (b is null)
+                throw new PolynomialArgumentNullException("Polynomial b is null");
 
             Polynomial result = new Polynomial();
             PolynomialMember tempPolynomial;
@@ -257,12 +275,15 @@ namespace PolynomialObject
             {
                 foreach (var itemB in b.ToArray())
                 {
-                    tempPolynomial = new PolynomialMember(itemA.Degree + itemB.Degree, itemA.Coefficient * itemB.Coefficient);
+                    if (itemA.Coefficient * itemB.Coefficient != 0)
+                    {
+                        tempPolynomial = new PolynomialMember(itemA.Degree + itemB.Degree, itemA.Coefficient * itemB.Coefficient);
 
-                    if (!result.ContainsMember(tempPolynomial.Degree))
-                        result.AddMember(tempPolynomial);
-                    else
-                        result[result.Find(tempPolynomial.Degree).Degree] += tempPolynomial.Coefficient;
+                        if (!result.ContainsMember(tempPolynomial.Degree))
+                            result.AddMember(tempPolynomial);
+                        else
+                            result[result.Find(tempPolynomial.Degree).Degree] += tempPolynomial.Coefficient;
+                    }
                 }
             }
             return result;
@@ -276,6 +297,9 @@ namespace PolynomialObject
         /// <exception cref="PolynomialArgumentNullException">Throws if provided polynomial is null</exception>
         public Polynomial Add(Polynomial polynomial)
         {
+            if (polynomial is null)
+                throw new PolynomialArgumentNullException("Polynomial is null");
+
             return this + polynomial;
         }
 
@@ -287,6 +311,9 @@ namespace PolynomialObject
         /// <exception cref="PolynomialArgumentNullException">Throws if provided polynomial is null</exception>
         public Polynomial Subtraction(Polynomial polynomial)
         {
+            if (polynomial is null)
+                throw new PolynomialArgumentNullException("Polynomial is null");
+
             return this - polynomial;
         }
 
@@ -298,7 +325,74 @@ namespace PolynomialObject
         /// <exception cref="PolynomialArgumentNullException">Throws if provided polynomial is null</exception>
         public Polynomial Multiply(Polynomial polynomial)
         {
+            if (polynomial is null)
+                throw new PolynomialArgumentNullException("Polynomial is null");
+
             return this * polynomial;
+        }
+
+        
+        /// <summary>
+        /// Adds polynomial and tuple
+        /// </summary>
+        /// <param name="a">The polynomial</param>
+        /// <param name="b">The tuple</param>
+        /// <returns>Returns new polynomial after adding</returns>
+        public static Polynomial operator +(Polynomial a, (double degree, double coefficient) b)
+        {
+            return a + new Polynomial((b.degree, b.coefficient));
+        }
+
+        /// <summary>
+        /// Subtract polynomial and tuple
+        /// </summary>
+        /// <param name="a">The polynomial</param>
+        /// <param name="b">The tuple</param>
+        /// <returns>Returns new polynomial after subtraction</returns>
+        public static Polynomial operator -(Polynomial a, (double degree, double coefficient) b)
+        {
+            return a - new Polynomial((b.degree, b.coefficient));
+        }
+
+        /// <summary>
+        /// Multiplies polynomial and tuple
+        /// </summary>
+        /// <param name="a">The polynomial</param>
+        /// <param name="b">The tuple</param>
+        /// <returns>Returns new polynomial after multiplication</returns>
+        public static Polynomial operator *(Polynomial a, (double degree, double coefficient) b)
+        {
+            return a * new Polynomial((b.degree, b.coefficient));
+        }
+
+        /// <summary>
+        /// Adds tuple to polynomial
+        /// </summary>
+        /// <param name="member">The tuple to add</param>
+        /// <returns>Returns new polynomial after adding</returns>
+        public Polynomial Add((double degree, double coefficient) member)
+        {
+            return this + (member.degree, member.coefficient) ;
+        }
+
+        /// <summary>
+        /// Subtracts tuple from polynomial
+        /// </summary>
+        /// <param name="member">The tuple to subtract</param>
+        /// <returns>Returns new polynomial after subtraction</returns>
+        public Polynomial Subtraction((double degree, double coefficient) member)
+        {
+            return this - (member.degree, member.coefficient);
+        }
+
+        /// <summary>
+        /// Multiplies tuple with polynomial
+        /// </summary>
+        /// <param name="member">The tuple for multiplication </param>
+        /// <returns>Returns new polynomial after multiplication</returns>
+        public Polynomial Multiply((double degree, double coefficient) member)
+        {
+            return this * (member.degree, member.coefficient);
         }
     }
 }

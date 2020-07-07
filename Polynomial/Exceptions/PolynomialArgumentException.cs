@@ -8,10 +8,8 @@ namespace PolynomialObject.Exceptions
     {
         public PolynomialArgumentException() { }
 
-        public PolynomialArgumentException(string message) { }
+        public PolynomialArgumentException(string message) : base(message) { }
 
-        protected PolynomialArgumentException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
+        protected PolynomialArgumentException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

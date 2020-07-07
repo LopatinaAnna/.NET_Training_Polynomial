@@ -32,7 +32,7 @@ namespace PolynomialTest
         {
             Assert.True(expected.SequenceEqual(actual, comparer), "Result is not as expected");
         }
-
+        
         #region low
 
         #region Data for Low Level
@@ -372,9 +372,9 @@ namespace PolynomialTest
         #endregion
 
         #endregion
-
+        
                 // UNCOMMENT TO CHECK ADVANCED PART
-        /*#region advanced
+        #region advanced
 
         #region Data for Advanced Level
         private static IEnumerable<TestCaseData> AddPolynomialTuplesTestCases
@@ -671,7 +671,7 @@ namespace PolynomialTest
         }
         #endregion
 
-        #endregion*/
+        #endregion
 
     }
 

@@ -1,5 +1,6 @@
 using PolynomialObject.Exceptions;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PolynomialObject
 {
@@ -14,6 +15,24 @@ namespace PolynomialObject
         public Polynomial(PolynomialMember member)
         {
             AddMember(member);
+        }
+
+        public Polynomial(IEnumerable<PolynomialMember> members)
+        {
+            Members = members.ToList();
+        }
+
+        public Polynomial((double degree, double coefficient) member)
+        {
+            AddMember((member.degree, member.coefficient));
+        }
+
+        public Polynomial(IEnumerable<(double degree, double coefficient)> members)
+        {
+            foreach (var (degree, coefficient) in members)
+            {
+                AddMember((degree, coefficient));
+            }
         }
 
         /// <summary>
